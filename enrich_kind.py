@@ -117,35 +117,65 @@ columns = [
 
 file_conll_format = ''
 
-token_ids = []
-token_forms = []
-token_labels = []
+for enum, sentence in enumerate(sentences):
 
-for enum, sentence in enumerate(sentences[1891:]):
+    tokens_id = []
+    tokens_form = []
+    tokens_upos = []
+    tokens_xpos = []
+    tokens_feats = []
+    tokens_head = []
+    tokens_deprel = []
+    tokens_deps = []
+    tokens_label = []
+    tokens_misc = []
+    tokens_lemma = []
+
     sentence_string = ''
     sentence_tokens = []
-    for token in sentence:
+
+    spacy_ids_to_conll_id = {}
+    for enum, token in enumerate(sentence[:20]):
         token_id = token['id']
         token_form = token['form']
         token_label = token['lemma']
         
-        token_ids.append(token_id)
-        token_forms.append(token_form)
-        token_labels.append(token_label)
+        spacy_ids_to_conll_id[enum] = token_id
+        tokens_id.append(token_id)
+        tokens_form.append(token_form)
+        tokens_label.append(token_label)
 
         sentence_string += token_form
         sentence_tokens.append(token_form)
         sentence_string += ' '
-
+    
     sentence_string = sentence_string[:-1]
-    try:
-        doc = nlp(sentence_string)
-    except ValueError:
-        print(sentence_string)
-        break
-    spacy_tokens = [t.text for t in doc]
-    if spacy_tokens != sentence_tokens:
-        print(enum, [x for x in sentence_tokens if x not in spacy_tokens], spacy_tokens, sentence_tokens)
-        break
+    doc = nlp(sentence_string)
 
+    for enum, spacy_token in enumerate(doc):
+        token_lemma = spacy_token.lemma_
+        token_upos = spacy_token.pos_
+        #TODO: implement xpos somehow
+        token_xpos = '_'
+        token_feats = spacy_token.morph if len(spacy_token.morph) > 0 else '_'
+        #TODO: head should point to an id from the spacy_ids_to_conll_ids created above
+        token_head = spacy_token.head
+        token_deprel = spacy_token.dep_
+        #TODO: implement enhanced dep
+        token_deps = '_'
+        token_misc = '_'
 
+        tokens_lemma.append(token_lemma)
+        tokens_upos.append(token_upos)
+        tokens_xpos.append(token_xpos)
+        tokens_feats.append(token_feats)
+        tokens_head.append(token_head)
+        tokens_deprel.append(token_deprel)
+        tokens_deps.append(token_deps)
+        tokens_misc.append(token_misc)
+    
+    for i, token_id in enumerate(tokens_id):
+        file_conll_format += f"{token_id}\t{tokens_form[i]}\t{tokens_lemma[i]}\t{tokens_upos[i]}\t{tokens_xpos[i]}\t{tokens_feats[i]}\t{tokens_head[i]}\t{tokens_deprel[i]}\t{tokens_deps[i]}\t{tokens_misc[i]}\t{tokens_label[i]}\n"
+    file_conll_format += "\n"
+
+print(file_conll_format)
